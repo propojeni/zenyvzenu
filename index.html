@@ -112,7 +112,7 @@
     .newsletter em,.join-card em{color:var(--rose)}
     .newsletter .eyebrow{color:var(--rose)}
     .newsletter-copy p{max-width:560px;margin-top:24px;color:rgba(253,250,245,.82)}
-    .se-form-shell{min-height:180px;padding:26px;border-radius:26px;background:var(--paper);color:var(--ink);box-shadow:0 30px 70px -38px #1e0d11;overflow:hidden}
+    .se-form-shell{display:block!important;visibility:visible!important;opacity:1!important;transform:none!important;min-height:180px;padding:26px;border-radius:26px;background:var(--paper);color:var(--ink);box-shadow:0 30px 70px -38px #1e0d11;overflow:hidden}
     .se-form-shell iframe{width:100%!important;max-width:100%!important;border:0!important;border-radius:16px!important;background:transparent!important}
     .se-form-shell form,.se-form-shell [class*="form"]{font-family:"DM Sans",sans-serif!important}
     .se-form-shell input[type="text"],.se-form-shell input[type="email"],.se-form-shell input[type="tel"],.se-form-shell select,.se-form-shell textarea{width:100%!important;min-height:54px!important;border:1px solid var(--line)!important;border-radius:14px!important;background:#fff!important;color:var(--espresso)!important;padding:13px 16px!important;font-family:"DM Sans",sans-serif!important;font-size:17px!important}
@@ -295,7 +295,7 @@
     <section class="newsletter" id="newsletter">
       <div class="wrap newsletter-grid">
         <div class="newsletter-copy reveal"><span class="eyebrow">Newsletter</span><h2>NEKOUKEJ NA TO JEN VE <em>STORIES.</em></h2><p>Další akce, nové termíny a věci, které chystáme, ti pošleme přímo. Žádný spam. Jen plány, které stojí za opuštění gauče a komfortní zóny. Litovat nebudeš. 🫶</p></div>
-        <div class="se-form-shell reveal" id="newsletter-form-shell"><script src="https://se-forms.cz/public/web-forms-v2/subscribe/679801-c4z6w2a0ouk1z054uedrmjgdhv12d1vaaofaxmhoxaoxj1dwra8i3bm81h41us13jfpa513wpnfx3gepxcrty05pcu0bowdluk5n" id="se-webformScriptLoader-679801-c4z6w2a0ouk1z054uedrmjgdhv12d1vaaofaxmhoxaoxj1dwra8i3bm81h41us13jfpa513wpnfx3gepxcrty05pcu0bowdluk5n" async defer></script></div>
+        <div class="se-form-shell" id="newsletter-form-shell"><script src="https://se-forms.cz/public/web-forms-v2/subscribe/679801-c4z6w2a0ouk1z054uedrmjgdhv12d1vaaofaxmhoxaoxj1dwra8i3bm81h41us13jfpa513wpnfx3gepxcrty05pcu0bowdluk5n" id="se-webformScriptLoader-679801-c4z6w2a0ouk1z054uedrmjgdhv12d1vaaofaxmhoxaoxj1dwra8i3bm81h41us13jfpa513wpnfx3gepxcrty05pcu0bowdluk5n" async defer></script></div>
       </div>
     </section>
 
@@ -373,6 +373,22 @@
       const home=document.getElementById('home-page');
       const company=document.getElementById('company-page');
       const cleanPath=()=>location.pathname.replace(/\/+$/,'')||'/';
+      const formLoaders={
+        home:{shell:'newsletter-form-shell',id:'se-webformScriptLoader-679801-c4z6w2a0ouk1z054uedrmjgdhv12d1vaaofaxmhoxaoxj1dwra8i3bm81h41us13jfpa513wpnfx3gepxcrty05pcu0bowdluk5n',src:'https://se-forms.cz/public/web-forms-v2/subscribe/679801-c4z6w2a0ouk1z054uedrmjgdhv12d1vaaofaxmhoxaoxj1dwra8i3bm81h41us13jfpa513wpnfx3gepxcrty05pcu0bowdluk5n'},
+        company:{shell:'membership-form-shell',id:'se-webformScriptLoader-679801-b5sfupyym2kfg37gqqhpz40qtbjjx38915384js8ffscy3smoxxp1jummcvfm0px43fgon0rh3vjnc6f14k69unlce5gz8e5lo1m',src:'https://se-forms.cz/public/web-forms-v2/subscribe/679801-b5sfupyym2kfg37gqqhpz40qtbjjx38915384js8ffscy3smoxxp1jummcvfm0px43fgon0rh3vjnc6f14k69unlce5gz8e5lo1m'}
+      };
+      function ensureVisibleForm(route){
+        const config=formLoaders[route];
+        const shell=document.getElementById(config.shell);
+        if(!shell||[...shell.children].some(child=>child.tagName!=='SCRIPT'))return;
+        const attempts=Number(shell.dataset.loadAttempts||0);
+        if(attempts>=2)return;
+        shell.dataset.loadAttempts=String(attempts+1);
+        shell.querySelectorAll('script[src*="se-forms.cz"]').forEach(script=>script.remove());
+        const loader=document.createElement('script');
+        loader.src=config.src;loader.id=config.id;loader.async=true;loader.defer=true;
+        shell.appendChild(loader);
+      }
       function initAutumnLeaves(){
         const container=document.getElementById('autumn-leaves');
         if(!container||container.childElementCount||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
@@ -392,7 +408,12 @@
         document.body.classList.toggle('route-company',isCompany);
         document.title=isCompany?'IN GOOD COMPANY — ŽENY V ZENU':'ŽENY V ZENU — víc života offline';
         if(push){history.pushState({route},'',isCompany?'/ingoodcompany':'/');window.scrollTo(0,0)}
-        requestAnimationFrame(()=>{observeReveals();if(isCompany)initAutumnLeaves()});
+        requestAnimationFrame(()=>{
+          observeReveals();
+          if(isCompany)initAutumnLeaves();
+          setTimeout(()=>ensureVisibleForm(isCompany?'company':'home'),700);
+          setTimeout(()=>ensureVisibleForm(isCompany?'company':'home'),3500);
+        });
       }
       showRoute(cleanPath()==='/ingoodcompany'?'company':'home');
       document.addEventListener('click',e=>{
