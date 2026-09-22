@@ -158,6 +158,10 @@
 
     /* IN GOOD COMPANY view */
     #company-page{background:var(--cream)}
+    .autumn-leaves{position:fixed;inset:0;z-index:45;overflow:hidden;pointer-events:none}
+    .autumn-leaf{position:absolute;top:-10vh;opacity:.58;will-change:transform;margin-left:0;animation-name:autumn-fall,autumn-sway;animation-timing-function:linear,ease-in-out;animation-iteration-count:infinite,infinite}
+    @keyframes autumn-fall{from{transform:translateY(-10vh) rotate(0deg)}to{transform:translateY(120vh) rotate(360deg)}}
+    @keyframes autumn-sway{0%,100%{margin-left:0}50%{margin-left:46px}}
     .company-nav .brand small{letter-spacing:.08em}
     .company-hero{min-height:96svh;display:grid;place-items:center;padding:150px 0 95px;background:radial-gradient(circle at 80% 22%,rgba(217,187,181,.72),transparent 31%),radial-gradient(circle at 18% 82%,rgba(166,174,158,.28),transparent 28%),var(--cream)}
     .company-hero .inner{max-width:1050px;text-align:center;margin:auto}
@@ -186,7 +190,7 @@
     .terms{padding:35px 0 100px;background:var(--cream)}.terms .wrap{max-width:900px}.terms .answer{font-size:17px}.terms h3{font-family:"DM Sans",sans-serif;font-size:19px;font-weight:600;letter-spacing:0;line-height:1.3;margin:24px 0 7px}
 
     .reveal{opacity:0;transform:translateY(28px);transition:opacity .75s ease,transform .75s ease}.reveal.visible{opacity:1;transform:none}
-    @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.reveal{opacity:1;transform:none;transition:none}.marquee-row{animation-play-state:paused}}
+    @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}.reveal{opacity:1;transform:none;transition:none}.marquee-row{animation-play-state:paused}.autumn-leaves{display:none}}
     @media (max-width:980px){
       .nav-links{position:absolute;left:18px;right:18px;top:78px;display:none;align-items:stretch;flex-direction:column;gap:0;padding:14px;border:1px solid var(--line);border-radius:22px;background:var(--paper);box-shadow:var(--shadow)}
       .nav-links.open{display:flex}.nav-links a{padding:13px 14px}.menu-toggle{display:block}
@@ -254,7 +258,7 @@
         <div class="reveal"><span class="eyebrow">Poznat ŽENY V ZENU</span><h2>ČEMU <em>VĚŘÍME.</em></h2></div>
         <div class="about-copy reveal">
           <p>Možná to znáš. Někam bys šla, ale nikdo zrovna nemůže. Chceš vyzkoušet něco nového, ale samotné se ti nechce. Ráda bys poznala nové ženy — ale kde se v dospělosti vlastně poznávají nové kamarádky?</p>
-          <p>Nejsme pouze kalendář akcí. Vytváříme místa a příležitosti, kde je úplně normální přijít sama, něco zažít a přirozeně poznat ženy, které bys jinak nikdy nepotkala. Tvoříme hodnoty a hodnotná přátelství.</p>
+          <p>Nejsme jen kalendář workshopů. Vytváříme místa a příležitosti, kde je úplně normální přijít sama, něco zažít a přirozeně poznat ženy, které bys jinak nikdy nepotkala. Tvoříme hodnoty a hodnotná přátelství.</p>
           <div class="value-grid">
             <article class="value"><h3>Přijď sama</h3><p>Nikdo nepotřebuje plus one.</p></article>
             <article class="value"><h3>Setkávej se opakovaně</h3><p>Hluboké a pečující vztahy vznikají, když se vracíme.</p></article>
@@ -313,6 +317,7 @@
   </main>
 
   <main id="company-page" hidden>
+    <div class="autumn-leaves" id="autumn-leaves" aria-hidden="true"></div>
     <nav class="site-nav company-nav" id="company-nav" aria-label="Navigace IN GOOD COMPANY">
       <a class="brand" href="/" data-route="home">ŽENY V ZENU<small>IN GOOD COMPANY</small></a>
       <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="company-links">Menu</button>
@@ -368,13 +373,26 @@
       const home=document.getElementById('home-page');
       const company=document.getElementById('company-page');
       const cleanPath=()=>location.pathname.replace(/\/+$/,'')||'/';
+      function initAutumnLeaves(){
+        const container=document.getElementById('autumn-leaves');
+        if(!container||container.childElementCount||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+        const icons=['🍂','🍁'];
+        for(let i=0;i<14;i++){
+          const leaf=document.createElement('span');leaf.className='autumn-leaf';leaf.textContent=icons[i%icons.length];
+          const fallDuration=16+Math.random()*14;const swayDuration=3+Math.random()*3;
+          leaf.style.left=(Math.random()*100)+'vw';leaf.style.fontSize=(14+Math.random()*15)+'px';
+          leaf.style.animationDuration=fallDuration+'s, '+swayDuration+'s';
+          leaf.style.animationDelay=(Math.random()*-30)+'s, '+(Math.random()*-5)+'s';
+          container.appendChild(leaf);
+        }
+      }
       function showRoute(route,push=false){
         const isCompany=route==='company';
         home.hidden=isCompany;company.hidden=!isCompany;
         document.body.classList.toggle('route-company',isCompany);
         document.title=isCompany?'IN GOOD COMPANY — ŽENY V ZENU':'ŽENY V ZENU — víc života offline';
         if(push){history.pushState({route},'',isCompany?'/ingoodcompany':'/');window.scrollTo(0,0)}
-        requestAnimationFrame(observeReveals);
+        requestAnimationFrame(()=>{observeReveals();if(isCompany)initAutumnLeaves()});
       }
       showRoute(cleanPath()==='/ingoodcompany'?'company':'home');
       document.addEventListener('click',e=>{
